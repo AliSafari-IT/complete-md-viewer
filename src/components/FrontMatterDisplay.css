@@ -1,0 +1,110 @@
+@import "../styles/theme-vars.css";
+/* FrontMatterDisplay Styles */
+.front-matter {
+  margin-bottom: 2rem;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.front-matter.dark-theme {
+  background-color: var(--card-bg-color);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.front-matter.light-theme {
+  background-color: var(--card-bg-color);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.front-matter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+}
+
+.front-matter-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.front-matter.dark-theme .front-matter-header {
+  background-color: var(--code-bg-color);
+}
+
+.front-matter.light-theme .front-matter-header {
+  background-color: var(--code-bg-color);
+}
+
+.front-matter-toggle {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.front-matter.dark-theme .front-matter-toggle {
+  color: var(--primary-color);
+}
+
+.front-matter.light-theme .front-matter-toggle {
+  color: var(--primary-color);
+}
+
+.front-matter-toggle:hover {
+  background-color: rgba(46, 204, 113, 0.1);
+}
+
+.front-matter-content {
+  padding: 1rem;
+  font-family: monospace;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+.front-matter-item {
+  margin-bottom: 0.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.front-matter-key {
+  font-weight: bold;
+  margin-right: 0.5rem;
+}
+
+.front-matter.dark-theme .front-matter-key {
+  color: var(--primary-color);
+}
+
+.front-matter.light-theme .front-matter-key {
+  color: var(--primary-color);
+}
+
+.front-matter-value {
+  margin-left: 1rem;
+}
+
+@media (max-width: 768px) {
+  .front-matter-header h2 {
+    font-size: 1.1rem;
+  }
+  
+  .front-matter-content {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+}
