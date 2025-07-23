@@ -1,8 +1,17 @@
-# Tutorial: Build a Beautiful Markdown Viewer with @asafarim/complete-md-viewer
+# Complete Tutorial: Build a Professional Markdown Documentation Site with @asafarim/complete-md-viewer
 
-Transform your markdown files into a professional documentation website! This tutorial will walk you through creating a stunning markdown viewer that displays your documentation with an interactive file tree, beautiful themes, collapsible sidebar, and responsive design.
+Transform your markdown files into a professional documentation website! This tutorial shows you exactly how to implement the `@asafarim/complete-md-viewer` package based on a real working project.
 
 ## 🎯 What You'll Build
+
+### Dark Mode with Expanded Sidebar and Front Matter
+![Dark Mode with Sidebar and Front Matter](./complete-md-viewer_dark-mode_sidebar-menu_FrontMatter-expanded.png)
+
+### Light Mode with Collapsed Sidebar
+![Light Mode with Collapsed Sidebar](./complete-md-viewer_light-mode_sidebar-menu-collapsed.png)
+
+### Mobile-Responsive View
+![Mobile View](./complete-md-viewer_dark-mode_mobile-view.png)
 
 By the end of this tutorial, you'll have:
 
@@ -39,14 +48,16 @@ npm init -y
 
 ### Install Required Dependencies
 
+**Important**: Use version `^1.0.1` or higher of the complete-md-viewer package:
+
 ```bash
 # Core dependencies
-npm install @asafarim/complete-md-viewer react react-dom react-router-dom
+npm install @asafarim/complete-md-viewer@^1.0.1 react react-dom react-router-dom
 npm install express cors
 
 # Development dependencies  
 npm install --save-dev @types/react @types/react-dom @vitejs/plugin-react
-npm install --save-dev typescript vite concurrently
+npm install --save-dev typescript vite concurrently kill-port cross-env
 ```
 
 ## 📄 Step 2: Configure Your Project
@@ -187,7 +198,147 @@ app.listen(PORT, () => {
 });
 ```
 
-## ⚛️ Step 4: Create the React Application
+## ⚛️ Step 4: Key Implementation - How to Use the Package
+
+### Method 1: Direct Integration (Recommended)
+
+Based on the working implementation, here's how to properly integrate the `@asafarim/complete-md-viewer` package:
+
+**src/App.tsx** - Main application with routing:
+
+```tsx
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
+import { CustomThemeProvider } from "./context/ThemeContext";
+import { Suspense } from "react";
+
+// Layout
+import Layout from "./components/layout/Layout";
+
+// Pages
+import Home from "./components/Home/Home";
+import Dashboard from "./components/Dashboard/Dashboard";
+import MarkdownViewer from "./components/MarkdownViewer/MarkdownViewer";
+
+// Component to conditionally render content based on the current route
+const AppContent = () => {
+  const location = useLocation();
+
+  // If the path starts with /docs, render the StandaloneMarkdownViewer
+  if (location.pathname.startsWith("/docs")) {
+    return (
+      <MarkdownViewer
+        apiBaseUrl="http://localhost:3300"
+        basePath="/docs"
+        hideFileTree={false}
+        integrated={false}
+      />
+    );
+  }
+
+  // If the path starts with /md-docs, render the IntegratedMarkdownViewer
+  if (location.pathname.startsWith("/md-docs")) {
+    return (
+      <MarkdownViewer
+        apiBaseUrl="http://localhost:3300"
+        basePath="/md-docs"
+        hideFileTree={false}
+        integrated={true}
+      />
+    );
+  }
+  // Otherwise render the regular routes
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
+
+function App() {
+  return (
+    <CustomThemeProvider>
+      <div className="app">
+        <BrowserRouter>
+          <Layout>
+            <Suspense fallback={<div>Loading...</div>}>
+              <AppContent />
+            </Suspense>
+          </Layout>
+        </BrowserRouter>
+      </div>
+    </CustomThemeProvider>
+  );
+}
+
+export default App;
+```
+
+### Method 2: Custom Wrapper Component
+
+**src/components/MarkdownViewer/CustomViewers.tsx** - Enhanced wrapper with mobile optimizations:
+
+```tsx
+import React, { useState, useEffect } from 'react';
+import { MarkdownViewerBase } from '@asafarim/complete-md-viewer';
+import '@asafarim/complete-md-viewer/dist/style.css';
+
+// Enhanced viewer wrapper with mobile optimizations
+const EnhancedMobileViewer: React.FC<{
+  apiBaseUrl: string;
+  basePath?: string;
+  hideFileTree?: boolean;
+  useExternalRouter?: boolean;
+}> = (props) => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if screen is mobile size
+  useEffect(() => {
+    const checkIsMobile = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+    };
+    
+    // Initial check
+    checkIsMobile();
+    
+    // Add event listener for window resize
+    window.addEventListener('resize', checkIsMobile);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
+
+  return (
+    <div className={`enhanced-viewer ${isMobile ? 'mobile' : ''}`}>
+      <MarkdownViewerBase
+        {...props}
+        hideFileTree={isMobile ? false : props.hideFileTree}
+        useExternalRouter={props.useExternalRouter || true}
+      />
+    </div>
+  );
+};
+
+export { EnhancedMobileViewer };
+```
+
+### Essential CSS Import
+
+**Important**: Always import the CSS file to get the proper styling:
+
+```tsx
+import '@asafarim/complete-md-viewer/dist/style.css';
+```
+
+## ⚛️ Step 5: Create the React Application
 
 ### Create `index.html`
 

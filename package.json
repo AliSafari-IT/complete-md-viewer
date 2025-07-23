@@ -1,6 +1,6 @@
 {
   "name": "@asafarim/complete-md-viewer",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A flexible markdown viewer with support for both standalone and integrated routing usecases",
   "main": "dist/complete-md-viewer.js",
   "types": "dist/index.d.ts",
@@ -57,7 +57,8 @@
   "files": [
     "dist",
     "README.md",
-    "how-to.md"
+    "how-to.md",
+    "*.png"
   ],
   "bugs": {
     "url": "https://github.com/alisafari-it/complete-md-viewer/issues"
