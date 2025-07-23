@@ -1,8 +1,8 @@
 {
   "name": "@asafarim/complete-md-viewer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A flexible markdown viewer with support for both standalone and integrated routing usecases",
-  "main": "dist/index.js",
+  "main": "dist/complete-md-viewer.js",
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
