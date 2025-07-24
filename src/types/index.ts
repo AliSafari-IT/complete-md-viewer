@@ -49,6 +49,12 @@ export interface MarkdownViewerProps {
   useExternalRouter?: boolean;
   
   /**
+   * Initial file path to load when component mounts
+   * Used for direct navigation to specific files
+   */
+  initialFilePath?: string | null;
+  
+  /**
    * Custom CSS class name
    */
   className?: string;
