@@ -243,7 +243,18 @@ The front matter will be automatically parsed and displayed in a beautiful metad
 
 ### IntegratedMarkdownViewer
 
-Same props as `StandaloneMarkdownViewer`, designed for use within existing React Router applications.
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| apiBaseUrl | string | - | API base URL for fetching markdown content |
+| showHomePage | boolean | true | Whether to show the home page when no file is selected |
+| hideFileTree | boolean | false | Whether to hide the file tree sidebar |
+| sidebarCollapsed | boolean | false | Initial state of the sidebar (collapsed/expanded) |
+| initialFilePath | string \| null | null | Initial file path to load for direct navigation |
+| className | string | - | Custom CSS class name |
+| style | object | - | Custom inline styles |
+| basePath | string | '/' | Base path for routing |
+
+**Note**: The `IntegratedMarkdownViewer` now automatically handles direct URL navigation. When users refresh the page on a specific markdown file URL, the component will extract the file path from the URL and load the correct file automatically.
 
 ### MarkdownContent
 
@@ -253,6 +264,7 @@ Same props as `StandaloneMarkdownViewer`, designed for use within existing React
 | showHomePage | boolean | true | Whether to show the home page |
 | hideFileTree | boolean | false | Whether to hide the file tree |
 | sidebarCollapsed | boolean | false | Control sidebar collapsed state |
+| initialFilePath | string \| null | null | Initial file path to load for direct navigation |
 | content | string | - | Direct markdown content (alternative to API fetching) |
 | frontMatter | object | - | Front matter metadata object |
 | className | string | - | Custom CSS class name |

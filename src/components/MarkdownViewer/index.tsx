@@ -13,6 +13,7 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
   showHomePage = true,
   hideFileTree = false,
   useExternalRouter = false,
+  initialFilePath = null,
   className = '',
   style = {},
   basePath = '/',
@@ -34,7 +35,33 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
         const tree = await fetchFileTree(apiBaseUrl);
         setFileTree(tree);
         
-        // If showHomePage is true, try to load README.md or index.md as default
+        // If we have an initialFilePath, try to load that file first
+        if (initialFilePath && tree.length > 0) {
+          console.log('MarkdownViewer - Looking for initial file:', initialFilePath);
+          const findFileByPath = (nodes: TreeNode[], targetPath: string): FileNode | null => {
+            for (const node of nodes) {
+              if (node.type === 'file' && node.path === targetPath) {
+                return node;
+              } else if (node.type === 'directory') {
+                const found = findFileByPath(node.children, targetPath);
+                if (found) return found;
+              }
+            }
+            return null;
+          };
+          
+          const targetFile = findFileByPath(tree, initialFilePath);
+          if (targetFile) {
+            console.log('MarkdownViewer - Found initial file, loading:', targetFile);
+            await handleFileSelect(targetFile);
+            setIsLoading(false);
+            return;
+          } else {
+            console.log('MarkdownViewer - Initial file not found:', initialFilePath);
+          }
+        }
+        
+        // If showHomePage is true and no initial file, try to load README.md or index.md as default
         if (showHomePage && tree.length > 0) {
           const findHomeFile = (nodes: TreeNode[]): FileNode | null => {
             for (const node of nodes) {
@@ -52,7 +79,7 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
           
           const homeFile = findHomeFile(tree);
           if (homeFile) {
-            handleFileSelect(homeFile);
+            await handleFileSelect(homeFile);
           }
         }
         
@@ -65,7 +92,7 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
     };
     
     loadFileTree();
-  }, [apiBaseUrl, showHomePage]);
+  }, [apiBaseUrl, showHomePage, initialFilePath]);
 
   // Handle file selection
   const handleFileSelect = async (file: FileNode) => {
