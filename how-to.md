@@ -2,6 +2,15 @@
 
 Transform your markdown files into a professional documentation website! This tutorial shows you exactly how to implement the `@asafarim/complete-md-viewer` package based on a real working project.
 
+## 🎮 Live Demo
+
+Before we dive into the tutorial, check out the live demo to see what we'll be building:
+
+- **Live Demo**: [demo-complete-md-viewer.vercel.app](https://demo-complete-md-viewer.vercel.app)
+- **Source Code**: [github.com/AliSafari-IT/demo-complete-md-viewer](https://github.com/AliSafari-IT/demo-complete-md-viewer)
+
+The demo showcases all the features we'll implement in this tutorial, including file tree navigation, theme switching, mobile responsiveness, and YAML front matter support.
+
 ## 🎯 What You'll Build
 
 ### Dark Mode with Expanded Sidebar and Front Matter
@@ -578,7 +587,50 @@ Modify `MarkdownContent` props in `src/App.tsx`:
 />
 ```
 
-## 📦 Step 8: Deploy Your Site
+## � Step 8: URL Handling and Direct Links
+
+One of the key features of the package is proper URL handling for direct links and page refreshes.
+
+### Direct File URLs
+
+Users can navigate directly to specific files using URLs like:
+- `https://yoursite.com/docs/getting-started.md`
+- `https://yoursite.com/docs/api/endpoints.md`
+
+### URL Refresh Behavior
+
+The package automatically handles page refreshes by:
+1. **Reading the current URL** when the component initializes
+2. **Extracting the file path** from the URL structure
+3. **Loading the correct file** instead of defaulting to README.md
+4. **Updating the file tree** to show the selected file
+
+### Browser Navigation
+
+The component properly handles:
+- **Back/Forward buttons** - Navigate through file history
+- **Direct URL entry** - Load specific files from address bar
+- **Page refresh** - Maintain current file selection
+
+### Implementation Details
+
+For `useExternalRouter={true}` mode (recommended for integrated apps):
+
+```tsx
+// The package automatically extracts file paths from URLs like:
+// /docs/subfolder/filename.md -> subfolder/filename.md
+// /md-docs/api/reference.md -> api/reference.md
+
+<MarkdownViewerBase
+  apiBaseUrl="http://localhost:3300"
+  basePath="/docs"
+  useExternalRouter={true} // Enables URL parsing
+/>
+```
+
+This ensures a seamless user experience where sharing links and refreshing pages work as expected.
+
+## �📦 Step 9: Deploy Your Site
 
 ### Build for Production
 
@@ -731,5 +783,23 @@ This structure enables:
 - Experiment with sidebar collapsed/expanded states for different user experiences
 - Add custom controls for toggling the sidebar state
 - Implement user preferences to remember sidebar state between sessions
+
+## 🎮 Demo Application
+
+Check out our complete demo application that showcases all the features covered in this tutorial:
+
+- **Live Demo**: [demo-complete-md-viewer.vercel.app](https://demo-complete-md-viewer.vercel.app)
+- **Source Code**: [github.com/AliSafari-IT/demo-complete-md-viewer](https://github.com/AliSafari-IT/demo-complete-md-viewer)
+
+The demo includes:
+- ✅ File tree navigation with collapsible sidebar
+- ✅ Light/dark theme switching
+- ✅ Mobile-responsive design
+- ✅ YAML front matter display
+- ✅ URL persistence and direct linking
+- ✅ Production deployment on Vercel
+- ✅ Express.js backend with CORS support
+
+Use the demo as a reference implementation or starting point for your own projects!
 
 Happy documenting! 🚀

@@ -35,27 +35,35 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
         const tree = await fetchFileTree(apiBaseUrl);
         setFileTree(tree);
         
-        // If using external router, extract file path from current URL
-        let targetFilePath = initialFilePath;
-        if (useExternalRouter && !targetFilePath) {
+        // Check for URL-specified file path (works for both external and internal router modes)
+        let urlFilePath: string | null = null;
+        
+        if (useExternalRouter) {
+          // For external router mode, extract from window.location.pathname
           const currentPath = window.location.pathname;
-          console.log('MarkdownViewer - Current URL path:', currentPath);
-          console.log('MarkdownViewer - Base path:', basePath);
-          
-          // Extract file path from URL by removing the base path
-          if (currentPath.startsWith(basePath)) {
-            const extractedPath = currentPath.substring(basePath.length);
-            const cleanPath = extractedPath.startsWith('/') ? extractedPath.substring(1) : extractedPath;
-            if (cleanPath && cleanPath.endsWith('.md')) {
-              targetFilePath = cleanPath;
-              console.log('MarkdownViewer - Extracted file path from URL:', targetFilePath);
+          if (currentPath && currentPath !== '/' && basePath) {
+            // Remove basePath from the beginning to get the file path
+            const basePathNormalized = basePath.startsWith('/') ? basePath : `/${basePath}`;
+            if (currentPath.startsWith(basePathNormalized)) {
+              urlFilePath = currentPath.substring(basePathNormalized.length);
+              if (urlFilePath.startsWith('/')) {
+                urlFilePath = urlFilePath.substring(1);
+              }
             }
+          }
+        } else {
+          // For standalone mode (internal router), extract from hash or pathname
+          const currentPath = window.location.hash ? window.location.hash.substring(1) : window.location.pathname;
+          if (currentPath && currentPath !== '/') {
+            urlFilePath = currentPath.startsWith('/') ? currentPath.substring(1) : currentPath;
           }
         }
         
-        // If we have a target file path (from initialFilePath or URL), try to load that file first
+        // Priority: URL file path > initialFilePath > default home file
+        const targetFilePath = urlFilePath || initialFilePath;
+        
         if (targetFilePath && tree.length > 0) {
-          console.log('MarkdownViewer - Looking for target file:', targetFilePath);
+          console.log('MarkdownViewer - Looking for file from URL/initial:', targetFilePath);
           const findFileByPath = (nodes: TreeNode[], targetPath: string): FileNode | null => {
             for (const node of nodes) {
               if (node.type === 'file' && node.path === targetPath) {
@@ -79,7 +87,7 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
           }
         }
         
-        // If showHomePage is true and no initial file, try to load README.md or index.md as default
+        // If showHomePage is true and no target file found, try to load README.md or index.md as default
         if (showHomePage && tree.length > 0) {
           const findHomeFile = (nodes: TreeNode[]): FileNode | null => {
             for (const node of nodes) {
@@ -110,50 +118,60 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
     };
     
     loadFileTree();
-  }, [apiBaseUrl, showHomePage, initialFilePath]);
+  }, [apiBaseUrl, showHomePage, initialFilePath, basePath, useExternalRouter]);
 
-  // Handle browser back/forward navigation when using external router
+  // Handle browser navigation (back/forward buttons) for both router modes
   useEffect(() => {
-    if (!useExternalRouter) return;
-
-    const handlePopState = async () => {
-      const currentPath = window.location.pathname;
-      console.log('MarkdownViewer - PopState event, path:', currentPath);
+    const handlePopState = () => {
+      // Re-parse URL and load the appropriate file
+      let urlFilePath: string | null = null;
       
-      // Extract file path from URL
-      if (currentPath.startsWith(basePath)) {
-        const extractedPath = currentPath.substring(basePath.length);
-        const cleanPath = extractedPath.startsWith('/') ? extractedPath.substring(1) : extractedPath;
-        
-        if (cleanPath && cleanPath.endsWith('.md') && fileTree.length > 0) {
-          console.log('MarkdownViewer - Loading file from navigation:', cleanPath);
-          
-          const findFileByPath = (nodes: TreeNode[], targetPath: string): FileNode | null => {
-            for (const node of nodes) {
-              if (node.type === 'file' && node.path === targetPath) {
-                return node;
-              } else if (node.type === 'directory') {
-                const found = findFileByPath(node.children, targetPath);
-                if (found) return found;
-              }
+      if (useExternalRouter) {
+        // For external router mode, extract from window.location.pathname
+        const currentPath = window.location.pathname;
+        if (currentPath && currentPath !== '/' && basePath) {
+          const basePathNormalized = basePath.startsWith('/') ? basePath : `/${basePath}`;
+          if (currentPath.startsWith(basePathNormalized)) {
+            urlFilePath = currentPath.substring(basePathNormalized.length);
+            if (urlFilePath.startsWith('/')) {
+              urlFilePath = urlFilePath.substring(1);
             }
-            return null;
-          };
-          
-          const targetFile = findFileByPath(fileTree, cleanPath);
-          if (targetFile) {
-            setSelectedFile(targetFile);
-            const { content, frontMatter } = await fetchFileContent(apiBaseUrl, targetFile.path);
-            setContent(content);
-            setFrontMatter(frontMatter || {});
           }
+        }
+      } else {
+        // For standalone mode (internal router), extract from hash or pathname
+        const currentPath = window.location.hash ? window.location.hash.substring(1) : window.location.pathname;
+        if (currentPath && currentPath !== '/') {
+          urlFilePath = currentPath.startsWith('/') ? currentPath.substring(1) : currentPath;
+        }
+      }
+      
+      if (urlFilePath && fileTree.length > 0) {
+        const findFileByPath = (nodes: TreeNode[], targetPath: string): FileNode | null => {
+          for (const node of nodes) {
+            if (node.type === 'file' && node.path === targetPath) {
+              return node;
+            } else if (node.type === 'directory') {
+              const found = findFileByPath(node.children, targetPath);
+              if (found) return found;
+            }
+          }
+          return null;
+        };
+        
+        const targetFile = findFileByPath(fileTree, urlFilePath);
+        if (targetFile) {
+          handleFileSelect(targetFile);
         }
       }
     };
 
     window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [useExternalRouter, basePath, fileTree, apiBaseUrl]);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [fileTree, basePath, useExternalRouter]);
 
   // Handle file selection
   const handleFileSelect = async (file: FileNode) => {
@@ -161,16 +179,16 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
       setIsLoading(true);
       setSelectedFile(file);
       
-      // If using external router, update the URL (only if it's different from current URL)
+      // Update the URL based on router mode
       if (useExternalRouter && window.history) {
+        // For external router mode, update pathname
         const filePath = file.path.startsWith('/') ? file.path.substring(1) : file.path;
         const newPath = `${basePath}${basePath.endsWith('/') ? '' : '/'}${filePath}`;
-        const currentPath = window.location.pathname;
-        
-        if (currentPath !== newPath) {
-          console.log('MarkdownViewer - Updating URL from', currentPath, 'to', newPath);
-          window.history.pushState({}, '', newPath);
-        }
+        window.history.pushState({}, '', newPath);
+      } else if (!useExternalRouter && window.history) {
+        // For standalone mode, update hash
+        const filePath = file.path.startsWith('/') ? file.path.substring(1) : file.path;
+        window.history.pushState({}, '', `#/${filePath}`);
       }
       
       const { content, frontMatter } = await fetchFileContent(apiBaseUrl, file.path);
