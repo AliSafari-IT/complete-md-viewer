@@ -35,9 +35,27 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
         const tree = await fetchFileTree(apiBaseUrl);
         setFileTree(tree);
         
-        // If we have an initialFilePath, try to load that file first
-        if (initialFilePath && tree.length > 0) {
-          console.log('MarkdownViewer - Looking for initial file:', initialFilePath);
+        // If using external router, extract file path from current URL
+        let targetFilePath = initialFilePath;
+        if (useExternalRouter && !targetFilePath) {
+          const currentPath = window.location.pathname;
+          console.log('MarkdownViewer - Current URL path:', currentPath);
+          console.log('MarkdownViewer - Base path:', basePath);
+          
+          // Extract file path from URL by removing the base path
+          if (currentPath.startsWith(basePath)) {
+            const extractedPath = currentPath.substring(basePath.length);
+            const cleanPath = extractedPath.startsWith('/') ? extractedPath.substring(1) : extractedPath;
+            if (cleanPath && cleanPath.endsWith('.md')) {
+              targetFilePath = cleanPath;
+              console.log('MarkdownViewer - Extracted file path from URL:', targetFilePath);
+            }
+          }
+        }
+        
+        // If we have a target file path (from initialFilePath or URL), try to load that file first
+        if (targetFilePath && tree.length > 0) {
+          console.log('MarkdownViewer - Looking for target file:', targetFilePath);
           const findFileByPath = (nodes: TreeNode[], targetPath: string): FileNode | null => {
             for (const node of nodes) {
               if (node.type === 'file' && node.path === targetPath) {
@@ -50,14 +68,14 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
             return null;
           };
           
-          const targetFile = findFileByPath(tree, initialFilePath);
+          const targetFile = findFileByPath(tree, targetFilePath);
           if (targetFile) {
-            console.log('MarkdownViewer - Found initial file, loading:', targetFile);
+            console.log('MarkdownViewer - Found target file, loading:', targetFile);
             await handleFileSelect(targetFile);
             setIsLoading(false);
             return;
           } else {
-            console.log('MarkdownViewer - Initial file not found:', initialFilePath);
+            console.log('MarkdownViewer - Target file not found:', targetFilePath);
           }
         }
         
@@ -94,17 +112,65 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
     loadFileTree();
   }, [apiBaseUrl, showHomePage, initialFilePath]);
 
+  // Handle browser back/forward navigation when using external router
+  useEffect(() => {
+    if (!useExternalRouter) return;
+
+    const handlePopState = async () => {
+      const currentPath = window.location.pathname;
+      console.log('MarkdownViewer - PopState event, path:', currentPath);
+      
+      // Extract file path from URL
+      if (currentPath.startsWith(basePath)) {
+        const extractedPath = currentPath.substring(basePath.length);
+        const cleanPath = extractedPath.startsWith('/') ? extractedPath.substring(1) : extractedPath;
+        
+        if (cleanPath && cleanPath.endsWith('.md') && fileTree.length > 0) {
+          console.log('MarkdownViewer - Loading file from navigation:', cleanPath);
+          
+          const findFileByPath = (nodes: TreeNode[], targetPath: string): FileNode | null => {
+            for (const node of nodes) {
+              if (node.type === 'file' && node.path === targetPath) {
+                return node;
+              } else if (node.type === 'directory') {
+                const found = findFileByPath(node.children, targetPath);
+                if (found) return found;
+              }
+            }
+            return null;
+          };
+          
+          const targetFile = findFileByPath(fileTree, cleanPath);
+          if (targetFile) {
+            setSelectedFile(targetFile);
+            const { content, frontMatter } = await fetchFileContent(apiBaseUrl, targetFile.path);
+            setContent(content);
+            setFrontMatter(frontMatter || {});
+          }
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [useExternalRouter, basePath, fileTree, apiBaseUrl]);
+
   // Handle file selection
   const handleFileSelect = async (file: FileNode) => {
     try {
       setIsLoading(true);
       setSelectedFile(file);
       
-      // If using external router, update the URL
+      // If using external router, update the URL (only if it's different from current URL)
       if (useExternalRouter && window.history) {
         const filePath = file.path.startsWith('/') ? file.path.substring(1) : file.path;
         const newPath = `${basePath}${basePath.endsWith('/') ? '' : '/'}${filePath}`;
-        window.history.pushState({}, '', newPath);
+        const currentPath = window.location.pathname;
+        
+        if (currentPath !== newPath) {
+          console.log('MarkdownViewer - Updating URL from', currentPath, 'to', newPath);
+          window.history.pushState({}, '', newPath);
+        }
       }
       
       const { content, frontMatter } = await fetchFileContent(apiBaseUrl, file.path);
