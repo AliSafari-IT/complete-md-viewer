@@ -14,10 +14,20 @@ A flexible, production-ready markdown viewer component for React applications wi
   - **Standalone mode** with built-in router for independent documentation sites
   - **Integrated mode** that works seamlessly with your existing React Router setup
 - 🚀 **Production Ready** - Optimized for performance and professional documentation sites
+- 🔗 **URL Persistence** - Direct file URLs work correctly on page refresh and browser navigation
+- 📂 **Deep Linking** - Share direct links to specific markdown files
 
 ## 🚀 Quick Start
 
 For a complete tutorial with screenshots and advanced features, see our [Complete Tutorial](./how-to.md).
+
+### 🎮 Live Demo
+
+See the package in action with our interactive demo application:
+- **Live Demo**: [demo-complete-md-viewer.vercel.app](https://demo-complete-md-viewer.vercel.app)
+- **Source Code**: [github.com/AliSafari-IT/demo-complete-md-viewer](https://github.com/AliSafari-IT/demo-complete-md-viewer)
+
+The demo showcases all features including file tree navigation, theme switching, mobile responsiveness, and YAML front matter support.
 
 ### Basic Setup
 
@@ -255,6 +265,13 @@ The front matter will be automatically parsed and displayed in a beautiful metad
 | basePath | string | '/' | Base path for routing |
 
 **Note**: The `IntegratedMarkdownViewer` now automatically handles direct URL navigation. When users refresh the page on a specific markdown file URL, the component will extract the file path from the URL and load the correct file automatically.
+
+## 🔄 Latest Updates (v1.1.0)
+
+- ✅ **Fixed URL Refresh Issue** - Direct file URLs now work correctly on page refresh
+- ✅ **Enhanced Browser Navigation** - Proper handling of back/forward buttons
+- ✅ **Improved URL Parsing** - Better extraction of file paths from URLs
+- ✅ **Demo Application** - Live demo available at [demo-complete-md-viewer.vercel.app](https://demo-complete-md-viewer.vercel.app)
 
 ### MarkdownContent
 
